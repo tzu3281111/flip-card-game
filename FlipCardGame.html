@@ -1,0 +1,87 @@
+# flip-card-game
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡單翻牌遊戲</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        .game-container { display: grid; grid-template-columns: repeat(4, 100px); grid-gap: 10px; justify-content: center; }
+        .card { width: 100px; height: 100px; background: gray; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .matched { background: lightgreen; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<h2>翻牌記憶遊戲</h2>
+<p>找到所有配對的牌！</p>
+<div class="game-container" id="gameBoard"></div>
+<p>✅ 答對次數：<span id="score">0</span></p>
+
+<script>
+    // 設定卡片圖案
+    const cards = ["🍎", "🍎", "🍌", "🍌", "🍇", "🍇", "🍉", "🍉"];
+    let shuffledCards = cards.sort(() => 0.5 - Math.random());
+    let firstCard = null, secondCard = null;
+    let lockBoard = false;
+    let score = 0;
+
+    const gameBoard = document.getElementById("gameBoard");
+    const scoreDisplay = document.getElementById("score");
+
+    // 建立卡片
+    shuffledCards.forEach((emoji, index) => {
+        const card = document.createElement("div");
+        card.classList.add("card");
+        card.dataset.emoji = emoji;
+        card.dataset.index = index;
+        card.innerHTML = "?";
+        card.addEventListener("click", flipCard);
+        gameBoard.appendChild(card);
+    });
+
+    // 翻牌邏輯
+    function flipCard() {
+        if (lockBoard) return;
+        this.innerHTML = this.dataset.emoji;
+        this.style.background = "white";
+
+        if (!firstCard) {
+            firstCard = this;
+        } else {
+            secondCard = this;
+            lockBoard = true;
+
+            setTimeout(() => {
+                if (firstCard.dataset.emoji === secondCard.dataset.emoji) {
+                    firstCard.classList.add("matched");
+                    secondCard.classList.add("matched");
+                    score++;
+                    scoreDisplay.textContent = score;
+
+                    // 當所有配對成功後，跳轉到 Google 表單記錄答對次數
+                    if (score === cards.length / 2) {
+                        sendScoreToGoogleForm(score);
+                    }
+                } else {
+                    firstCard.innerHTML = "?";
+                    secondCard.innerHTML = "?";
+                    firstCard.style.background = "gray";
+                    secondCard.style.background = "gray";
+                }
+                firstCard = secondCard = null;
+                lockBoard = false;
+            }, 500);
+        }
+    }
+
+    // 當遊戲結束時，跳轉到 Google 表單
+    function sendScoreToGoogleForm(score) {
+        const googleFormUrl = "你的 Google 表單連結";
+        window.location.href = googleFormUrl + "?entry.1234567890=" + score;
+    }
+</script>
+
+</body>
+</html>
